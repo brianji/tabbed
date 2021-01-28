@@ -45,9 +45,9 @@
 #define MIN(a, b)               ((a) < (b) ? (a) : (b))
 #define LENGTH(x)               (sizeof((x)) / sizeof(*(x)))
 #define CLEANMASK(mask)         (mask & ~(numlockmask | LockMask))
-#define TEXTW(x)                (textnw(x, strlen(x)) + dc.font.height)
+#define TEXTW(x)                (textnw(x, strlen(x)) + dc.h)
 
-enum { ColFG, ColBG, ColLast };       /* color */
+enum { ColFG, ColBG, ColBD, ColLast };       /* color */
 enum { WMProtocols, WMDelete, WMName, WMState, WMFullscreen,
        XEmbed, WMSelectTab, WMLast }; /* default atoms */
 
@@ -346,14 +346,14 @@ drawbar(void)
 	if ((fc = getfirsttab()) + cc < nclients) {
 		dc.w = TEXTW(after);
 		dc.x = width - dc.w;
-		drawtext(after, dc.sel);
+		drawtext(after, dc.norm);
 		width -= dc.w;
 	}
 	dc.x = 0;
 
 	if (fc > 0) {
 		dc.w = TEXTW(before);
-		drawtext(before, dc.sel);
+		drawtext(before, dc.norm);
 		dc.x += dc.w;
 		width -= dc.w;
 	}
@@ -382,16 +382,19 @@ drawtext(const char *text, XftColor col[ColLast])
 	char buf[256];
 	XftDraw *d;
 	XRectangle r = { dc.x, dc.y, dc.w, dc.h };
+	XRectangle b = { dc.x, dc.h - 2, dc.w, 2 };
 
 	XSetForeground(dpy, dc.gc, col[ColBG].pixel);
 	XFillRectangles(dpy, dc.drawable, dc.gc, &r, 1);
+	XSetForeground(dpy, dc.gc, col[ColBD].pixel);
+	XFillRectangles(dpy, dc.drawable, dc.gc, &b, 1);
 	if (!text)
 		return;
 
 	olen = strlen(text);
 	h = dc.font.ascent + dc.font.descent;
 	y = dc.y + (dc.h / 2) - (h / 2) + dc.font.ascent;
-	x = dc.x + (h / 2);
+	x = dc.x + (dc.h / 2);
 
 	/* shorten text if necessary */
 	for (len = MIN(olen, sizeof(buf));
@@ -984,7 +987,7 @@ setup(void)
 	screen = DefaultScreen(dpy);
 	root = RootWindow(dpy, screen);
 	initfont(font);
-	bh = dc.h = dc.font.height + 2;
+	bh = dc.h = 32;
 
 	/* init atoms */
 	wmatom[WMDelete] = XInternAtom(dpy, "WM_DELETE_WINDOW", False);
@@ -1032,10 +1035,13 @@ setup(void)
 
 	dc.norm[ColBG] = getcolor(normbgcolor);
 	dc.norm[ColFG] = getcolor(normfgcolor);
+	dc.norm[ColBD] = getcolor(normbdcolor);
 	dc.sel[ColBG] = getcolor(selbgcolor);
 	dc.sel[ColFG] = getcolor(selfgcolor);
+	dc.sel[ColBD] = getcolor(selbdcolor);
 	dc.urg[ColBG] = getcolor(urgbgcolor);
 	dc.urg[ColFG] = getcolor(urgfgcolor);
+	dc.urg[ColBD] = getcolor(urgbdcolor);
 	dc.drawable = XCreatePixmap(dpy, root, ww, wh,
 	                            DefaultDepth(dpy, screen));
 	dc.gc = XCreateGC(dpy, root, 0, 0);
