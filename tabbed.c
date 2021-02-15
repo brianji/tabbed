@@ -396,8 +396,10 @@ drawtext(const char *text, XftColor col[ColLast])
 
 	XSetForeground(dpy, dc.gc, col[ColBG].pixel);
 	XFillRectangles(dpy, dc.drawable, dc.gc, &r, 1);
-	XSetForeground(dpy, dc.gc, col[ColBD].pixel);
-	XFillRectangles(dpy, dc.drawable, dc.gc, &b, 1);
+	if (nclients > 1) {
+		XSetForeground(dpy, dc.gc, col[ColBD].pixel);
+		XFillRectangles(dpy, dc.drawable, dc.gc, &b, 1);
+	}
 	if (!text)
 		return;
 
